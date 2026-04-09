@@ -1,0 +1,39 @@
+name: generate animation
+
+on:
+  # 自动执行，每天 UTC 时间 0 点（北京时间早上 8 点）
+  schedule:
+    - cron: "0 0 * * *"
+  # 允许手动在 GitHub 网页上点击运行
+  workflow_dispatch:
+
+  # 当向主分支推送代码时触发
+  push:
+    branches:
+      - main  # 默认分支
+
+jobs:
+  generate:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      # 1. 生成贪吃蛇 SVG 动画
+      - name: generate github-contribution-grid-snake.svg
+        uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            dist/github-contribution-grid-snake.svg
+            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+
+      # 2. 将生成的 SVG 文件推送到仓库的 'output' 分支
+      - name: push svg to output branch
+        uses: crazy-max/ghaction-github-pages@v4.0.0
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
